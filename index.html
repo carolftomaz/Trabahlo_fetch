@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Em destaque</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<main class="container">
+
+<header>
+<h1>Em destaque</h1>
+<p>Produtos selecionados da loja</p>
+</header>
+
+<section class="filtros">
+<input type="text" id="buscaNome" placeholder="Buscar por nome">
+<input type="number" step="0.01" id="buscaPreco" placeholder="Buscar por preço">
+</section>
+
+<section id="loading" class="loading">
+Carregando produtos...
+</section>
+
+<section id="mensagem" class="mensagem"></section>
+
+<section id="produtos" class="grid"></section>
+
+</main>
+
+<script src="script.js"></script>
+</body>
+</html>
