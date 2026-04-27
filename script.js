@@ -8,201 +8,183 @@ const buscaPreco = document.getElementById("buscaPreco");
 
 let produtosValidos = [];
 
-const imagensLocais = {
-"Notebook Gamer":"notebookgamer.jpg",
-"Mouse RGB":"mousergb.jpg",
-"Headset 7.1":"Headset 7.1.jpg",
-"Cadeira Ergonômica":"Cadeira Ergonômica.jpg",
-"Webcam Full HD":"Webcam Full HD.jpg",
-"Microfone Condensador":"Microfone Condensador.jpg",
-"SSD 1TB":"SSD 1TB.jpg",
-"Memória RAM 16GB":"Memória RAM 16GB.jpg",
-"Placa de Vídeo":"Placa de Vídeo.jpg",
-"Placa Mãe":"Placa Mãe.jpg",
-"Fonte 600W":"Fonte 600W.jpg",
-"Monitor Secundário":"Monitor Secundário.jpg",
-"Mousepad XL":"Mousepad XL.jpg",
-"Cabo HDMI":"Cabo HDMI.jpg",
-"Adaptador Wifi":"Adaptador Wifi.jpg",
-"Hub USB":"Hub USB.jpg"
-};
-
 const mockProdutos = [
-{name:"Notebook Gamer",price:4500},
-{name:"Mouse RGB",price:200},
-{name:"Headset 7.1",price:99.90},
-{name:"Cadeira Ergonômica",price:1200},
-{name:"Webcam Full HD",price:350},
-{name:"Microfone Condensador",price:599},
-{name:"SSD 1TB",price:450},
-{name:"Memória RAM 16GB",price:380},
-{name:"Placa de Vídeo",price:2500.50},
-{name:"Placa Mãe",price:890},
-{name:"Fonte 600W",price:350},
-{name:"Monitor Secundário",price:700},
-{name:"Mousepad XL",price:80},
-{name:"Cabo HDMI",price:25},
-{name:"Adaptador Wifi",price:45},
-{name:"Hub USB",price:120}
+    { name: "Notebook Gamer", price: 4500 },
+    { name: "Mouse RGB", price: 200 },
+    { name: "Headset 7.1", price: 99.90 },
+    { name: "Cadeira Ergonômica", price: 1200 },
+    { name: "Webcam Full HD", price: 350 },
+    { name: "Microfone Condensador", price: 599 },
+    { name: "SSD 1TB", price: 450 },
+    { name: "Memória RAM 16GB", price: 380 },
+    { name: "Placa de Vídeo", price: 2500.50 },
+    { name: "Placa Mãe", price: 890 },
+    { name: "Fonte 600W", price: 350 },
+    { name: "Monitor Secundário", price: 700 },
+    { name: "Mousepad XL", price: 80 },
+    { name: "Cabo HDMI", price: 25 },
+    { name: "Adaptador Wifi", price: 45 },
+    { name: "Hub USB", price: 120 }
 ];
 
-function mostrarLoading(status){
-loading.style.display = status ? "block" : "none";
+function mostrarLoading(status) {
+    loading.style.display = status ? "block" : "none";
 }
 
-function mostrarMensagem(texto){
-mensagem.textContent = texto;
+function mostrarMensagem(texto) {
+    mensagem.textContent = texto;
 }
 
-function validarProduto(produto){
-const nome = produto.name || produto.nome || produto.title;
-const preco = produto.price || produto.preco;
+function validarProduto(produto) {
+    const nome = produto.name || produto.nome || produto.title;
+    const preco = produto.price || produto.preco;
 
-if(!nome) return false;
-if(!preco) return false;
-if(isNaN(preco)) return false;
-if(Number(preco) <= 0) return false;
+    if (!nome) return false;
+    if (!preco) return false;
+    if (isNaN(preco)) return false;
+    if (Number(preco) <= 0) return false;
 
-return true;
+    return true;
 }
 
-function normalizarProduto(produto){
-const nome = produto.name || produto.nome || produto.title;
-const preco = produto.price || produto.preco;
+function normalizarProduto(produto) {
+    const nome = produto.name || produto.nome || produto.title;
+    const preco = produto.price || produto.preco;
 
-return{
-name:nome,
-price:Number(preco),
-description:"Produto em destaque.",
-image:imagensLocais[nome] || "notebookgamer.jpg"
-};
+    return {
+        name: nome,
+        price: Number(preco),
+        description: produto.description || produto.descricao || "Produto em destaque."
+    };
 }
 
-function salvarCache(produtos){
-localStorage.setItem("produtosDestaque",JSON.stringify({
-tempo:Date.now(),
-produtos:produtos
-}));
+function salvarCache(produtos) {
+    localStorage.setItem("produtosDestaque", JSON.stringify({
+        tempo: Date.now(),
+        produtos: produtos
+    }));
 }
 
-function buscarCache(){
-const cache = localStorage.getItem("produtosDestaque");
+function buscarCache() {
+    const cache = localStorage.getItem("produtosDestaque");
 
-if(!cache) return null;
+    if (!cache) return null;
 
-const dados = JSON.parse(cache);
+    try {
+        const dados = JSON.parse(cache);
 
-if(Date.now() - dados.tempo < 120000){
-return dados.produtos;
+        if (Date.now() - dados.tempo < 120000) {
+            return dados.produtos;
+        }
+
+        localStorage.removeItem("produtosDestaque");
+        return null;
+    } catch {
+        localStorage.removeItem("produtosDestaque");
+        return null;
+    }
 }
 
-localStorage.removeItem("produtosDestaque");
-return null;
+function pegarLista(dados) {
+    if (Array.isArray(dados)) return dados;
+    if (Array.isArray(dados.items)) return dados.items;
+    if (Array.isArray(dados.products)) return dados.products;
+    if (Array.isArray(dados.produtos)) return dados.produtos;
+
+    return [];
 }
 
-function pegarLista(dados){
-if(Array.isArray(dados)) return dados;
-if(Array.isArray(dados.items)) return dados.items;
-if(Array.isArray(dados.products)) return dados.products;
-if(Array.isArray(dados.produtos)) return dados.produtos;
-return [];
+async function buscarAPI() {
+    for (let tentativa = 1; tentativa <= 5; tentativa++) {
+        try {
+            const resposta = await fetch(API_URL);
+
+            if (!resposta.ok) {
+                throw new Error();
+            }
+
+            const dados = await resposta.json();
+            const lista = pegarLista(dados);
+
+            if (lista.length === 0) {
+                throw new Error();
+            }
+
+            return lista;
+        } catch {
+            if (tentativa === 5) {
+                mostrarMensagem("API indisponível. Produtos carregados do MOCK local.");
+                return mockProdutos;
+            }
+
+            await new Promise(resolve => setTimeout(resolve, 3000));
+        }
+    }
 }
 
-async function buscarAPI(){
-for(let i=1;i<=5;i++){
-try{
-const resposta = await fetch(API_URL);
+function exibirProdutos(lista) {
+    produtosContainer.innerHTML = "";
 
-if(!resposta.ok){
-throw new Error();
+    if (lista.length === 0) {
+        mostrarMensagem("Nenhum produto encontrado.");
+        return;
+    }
+
+    lista.forEach(produto => {
+        produtosContainer.innerHTML += `
+            <article class="card">
+                <h2>${produto.name}</h2>
+                <p>${produto.description}</p>
+                <div class="preco">R$ ${produto.price.toFixed(2).replace(".", ",")}</div>
+            </article>
+        `;
+    });
 }
 
-const dados = await resposta.json();
-const lista = pegarLista(dados);
+function filtrarProdutos() {
+    const nome = buscaNome.value.toLowerCase().trim();
+    const preco = parseFloat(buscaPreco.value);
 
-if(lista.length === 0){
-throw new Error();
+    const filtrados = produtosValidos.filter(produto => {
+        const filtroNome = produto.name.toLowerCase().includes(nome);
+
+        const filtroPreco = isNaN(preco)
+            ? true
+            : produto.price === preco;
+
+        return filtroNome && filtroPreco;
+    });
+
+    exibirProdutos(filtrados);
 }
 
-return lista;
+async function carregarProdutos() {
+    mostrarLoading(true);
+    mostrarMensagem("");
 
-}catch{
+    const cache = buscarCache();
 
-if(i === 5){
-mostrarMensagem("API indisponível. Produtos carregados do MOCK local.");
-return mockProdutos;
+    if (cache) {
+        produtosValidos = cache;
+        exibirProdutos(produtosValidos);
+        mostrarLoading(false);
+        return;
+    }
+
+    const dados = await buscarAPI();
+
+    produtosValidos = dados
+        .filter(validarProduto)
+        .map(normalizarProduto)
+        .slice(0, 16);
+
+    salvarCache(produtosValidos);
+    exibirProdutos(produtosValidos);
+
+    mostrarLoading(false);
 }
 
-await new Promise(resolve => setTimeout(resolve,3000));
-}
-}
-}
-
-function exibirProdutos(lista){
-produtosContainer.innerHTML = "";
-
-if(lista.length === 0){
-mostrarMensagem("Nenhum produto encontrado.");
-return;
-}
-
-lista.forEach(produto => {
-produtosContainer.innerHTML += `
-<article class="card">
-<img src="${produto.image}" alt="${produto.name}">
-<h2>${produto.name}</h2>
-<p>${produto.description}</p>
-<div class="preco">R$ ${produto.price.toFixed(2).replace(".",",")}</div>
-</article>
-`;
-});
-}
-
-function filtrarProdutos(){
-const nome = buscaNome.value.toLowerCase().trim();
-const preco = parseFloat(buscaPreco.value);
-
-const filtrados = produtosValidos.filter(produto => {
-
-const filtroNome = produto.name.toLowerCase().includes(nome);
-
-const filtroPreco = isNaN(preco)
-? true
-: produto.price === preco;
-
-return filtroNome && filtroPreco;
-});
-
-exibirProdutos(filtrados);
-}
-
-async function carregarProdutos(){
-mostrarLoading(true);
-mostrarMensagem("");
-
-const cache = buscarCache();
-
-if(cache){
-produtosValidos = cache;
-exibirProdutos(produtosValidos);
-mostrarLoading(false);
-return;
-}
-
-let dados = await buscarAPI();
-
-produtosValidos = dados
-.filter(validarProduto)
-.map(normalizarProduto)
-.slice(0,16);
-
-salvarCache(produtosValidos);
-exibirProdutos(produtosValidos);
-
-mostrarLoading(false);
-}
-
-buscaNome.addEventListener("input",filtrarProdutos);
-buscaPreco.addEventListener("input",filtrarProdutos);
+buscaNome.addEventListener("input", filtrarProdutos);
+buscaPreco.addEventListener("input", filtrarProdutos);
 
 carregarProdutos();
